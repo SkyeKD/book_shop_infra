@@ -30,6 +30,11 @@ echo "EC2 Public IP: $EC2_PUBLIC_IP"
 echo "$INSTANCE_ID" > ec2-instance-id.env
 echo "$EC2_PUBLIC_IP" > ec2_ip.txt
 
+echo "🚀 Checking SSH Key..."
+ls -lah ~/.ssh/
+cat ~/.ssh/bookshop-key.pem
+
+
 # 6️⃣ install docker
 echo "🚀 Installing Docker, Git, and MySQL on EC2..."
 
@@ -62,7 +67,7 @@ echo "🚀 Installing Docker, Git, and MySQL on EC2..."
     
 # EOF
 
-ssh -t -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
+ssh -tt -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
     sudo su -c '
     set -e
 
