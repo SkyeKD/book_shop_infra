@@ -30,6 +30,10 @@ echo "EC2 Public IP: $EC2_PUBLIC_IP"
 echo "$INSTANCE_ID" > ec2-instance-id.env
 echo "$EC2_PUBLIC_IP" > ec2_ip.txt
 
+echo "🚀 Setting up SSH Key..."
+mkdir -p ~/.ssh
+echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/bookshop-key.pem
+chmod 400 ~/.ssh/bookshop-key.pem
 
 # 6️⃣ install docker
 echo "🚀 Installing Docker, Git, and MySQL on EC2..."
