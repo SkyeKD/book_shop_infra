@@ -34,31 +34,65 @@ echo "$EC2_PUBLIC_IP" > ec2_ip.txt
 # 6️⃣ install docker
 echo "🚀 Installing Docker, Git, and MySQL on EC2..."
 
+# ssh -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
+#     sudo su -c '
+#     set -e
+
+#     sudo yum update -y
+#     sudo yum install -y git
+
+#     sudo yum install -y docker
+#     sudo systemctl start docker
+#     sudo systemctl enable docker
+#     sudo usermod -aG docker ec2-user
+#     sudo usermod -aG docker ec2-user
+
+#     DOCKER_COMPOSE_VERSION="2.22.0"
+#     sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+#     sudo chmod +x /usr/local/bin/docker-compose
+#     newgrp docker
+#     sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+#     sudo yum install -y mariadb105
+
+#     echo "✅ Git Version: $(git --version)"
+#     echo "✅ Docker Version: $(docker --version)"
+#     echo "✅ Docker Compose Version: $(docker-compose --version)"
+#     echo "✅ MySQL Version: $(mysql --version)"
+#     '
+    
+# EOF
+
 ssh -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
     sudo su -c '
     set -e
 
+    echo "📦 Updating system packages..."
     sudo yum update -y
-    sudo yum install -y git
 
+    echo "📦 Installing Git..."
+    sudo yum install -y git
+    git --version || echo "❌ Git installation failed"
+
+    echo "📦 Installing Docker..."
     sudo yum install -y docker
     sudo systemctl start docker
     sudo systemctl enable docker
     sudo usermod -aG docker ec2-user
-    sudo usermod -aG docker ec2-user
 
+    echo "📦 Installing Docker Compose..."
     DOCKER_COMPOSE_VERSION="2.22.0"
     sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
-    newgrp docker
     sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
+    echo "📦 Installing MySQL (MariaDB)..."
     sudo yum install -y mariadb105
 
-    echo "✅ Git Version: $(git --version)"
-    echo "✅ Docker Version: $(docker --version)"
-    echo "✅ Docker Compose Version: $(docker-compose --version)"
-    echo "✅ MySQL Version: $(mysql --version)"
+    echo "✅ Git Version: $(git --version || echo 'Not installed')"
+    echo "✅ Docker Version: $(docker --version || echo 'Not installed')"
+    echo "✅ Docker Compose Version: $(docker-compose --version || echo 'Not installed')"
+    echo "✅ MySQL Version: $(mysql --version || echo 'Not installed')"
     '
 EOF
 
