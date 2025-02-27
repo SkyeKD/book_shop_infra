@@ -26,18 +26,45 @@ jobs:
       # run deploy-ec2.sh 
       - name: Deploy EC2 Instance
         run: |
+          set -e
           chmod +x scripts/deploy-ec2.sh
           ./scripts/deploy-ec2.sh
+          sleep 10
 
       # get  EC2 Public IP
       - name: Get EC2 Public IP
-        run: echo "EC2_PUBLIC_IP=$(cat ec2_ip.txt)" >> $GITHUB_ENV
+        run: |
+          if [ -f ec2_ip.txt ]; then
+            echo "EC2_PUBLIC_IP=$(cat ec2_ip.txt)" >> $GITHUB_ENV
+          else
+            echo "❌ Error: No EC2 IP found!"
+            exit 1
+          fi
       
       - name: Debug EC2 Public IP
         run: cat ec2_ip.txt || echo "No EC2 IP found!"
     
-      - name: Wait for EC2 to be ready
+      - name: Setup SSH Key
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/bookshop-key.pem
+          chmod 600 ~/.ssh/bookshop-key.pem
+          ssh-keyscan -H ${{ env.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+
+      - name: Wait for EC2 to be ready
+        # run: |
+        #   echo "Waiting for EC2 SSH access..."
+        #   until ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} "echo 'EC2 is ready'"
+        #   do
+        #     sleep 10
+        #   done
+        #     - name: Wait for EC2 to be ready
+        run: |
+          if [ -z "${{ env.EC2_PUBLIC_IP }}" ]; then
+            echo "❌ EC2_PUBLIC_IP is empty. Cannot proceed."
+            exit 1
+          fi
+          
           echo "Waiting for EC2 SSH access..."
           until ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} "echo 'EC2 is ready'"
           do
