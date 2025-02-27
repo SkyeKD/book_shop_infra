@@ -26,9 +26,9 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/bookshop-key.pem
+          printf "%s" "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/bookshop-key.pem
           chmod 400 ~/.ssh/bookshop-key.pem
-
+      # echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/bookshop-key.pem
       # run deploy-ec2.sh 
       - name: Deploy EC2 Instance
         run: |

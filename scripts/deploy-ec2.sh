@@ -62,7 +62,7 @@ echo "🚀 Installing Docker, Git, and MySQL on EC2..."
     
 # EOF
 
-ssh -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
+ssh -t -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
     sudo su -c '
     set -e
 
