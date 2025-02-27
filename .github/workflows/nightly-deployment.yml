@@ -1,0 +1,72 @@
+name: Nightly Deployment & Smoke Test
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  
+  workflow_dispatch:  
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Infra Repo
+        uses: actions/checkout@v4
+
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          region: us-west-2  
+
+      # run deploy-ec2.sh 
+      - name: Deploy EC2 Instance
+        run: |
+          chmod +x scripts/deploy-ec2.sh
+          ./scripts/deploy-ec2.sh
+
+      # get  EC2 Public IP
+      - name: Get EC2 Public IP
+        run: echo "EC2_PUBLIC_IP=$(cat ec2_ip.txt)" >> $GITHUB_ENV
+      
+      - name: Debug EC2 Public IP
+        run: cat ec2_ip.txt || echo "No EC2 IP found!"
+    
+      - name: Wait for EC2 to be ready
+        run: |
+          echo "Waiting for EC2 SSH access..."
+          until ssh -o StrictHostKeyChecking=no -i my-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} "echo 'EC2 is ready'"
+          do
+            sleep 10
+          done
+
+      # connect to EV2 and run Smoke Test
+      - name: Run Smoke Test on EC2
+        run: |
+          chmod 400 ~/.ssh/bookshop-key.pem
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
+          
+            git clone https://github.com/SkyeKD/book_shop.git
+            cd book_shop
+            
+            sudo docker-compose -f docker-compose.smoke.yml up -d --build
+            
+            chmod +x scripts/smoke-test.sh
+            ./scripts/smoke-test.sh
+          EOF
+
+      # end EC2
+      - name: Terminate EC2 Instance
+        if: always()
+        run: |
+          INSTANCE_ID=$(cat ec2-instance-id.env)
+          if [ -z "$INSTANCE_ID" ]; then
+            echo "❌ No EC2 Instance ID found, skipping termination."
+          else
+            aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+            echo "✅ EC2 Instance $INSTANCE_ID Terminated!"
+          fi
