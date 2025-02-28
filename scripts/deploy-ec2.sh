@@ -60,7 +60,9 @@ ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@$EC2_PUBLIC_IP
   sudo apt install -y git || echo "⚠️ Git installation failed"
   git --version || echo "❌ Git installation verification failed"
 
-
+  echo "📦 Installing MySQL (MariaDB 10.5)..."
+  sudo apt install -y mariadb-server
+  sudo systemctl enable --now mariadb
 
   echo "✅ Git Version: \$(git --version || echo '❌ Git installation failed!')"
   echo "✅ MySQL Version: \$(mysql --version || echo '❌ MySQL installation failed!')"
