@@ -52,16 +52,10 @@ jobs:
         
       - name: Test SSH Connection
         run: |
-          ssh -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} "echo 'SSH Connection Successful'"
-          
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "echo 'SSH Connection Successful'"
+ 
       - name: Wait for EC2 to be ready
-        # run: |
-        #   echo "Waiting for EC2 SSH access..."
-        #   until ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} "echo 'EC2 is ready'"
-        #   do
-        #     sleep 10
-        #   done
-        #     - name: Wait for EC2 to be ready
+
         run: |
           if [ -z "${{ env.EC2_PUBLIC_IP }}" ]; then
             echo "❌ EC2_PUBLIC_IP is empty. Cannot proceed."
@@ -70,7 +64,7 @@ jobs:
           
           echo "Waiting for EC2 SSH access..."
           chmod 400 ~/.ssh/bookshop-key.pem
-          until ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} "echo 'EC2 is ready'"
+          until ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "echo 'EC2 is ready'"
           do
             sleep 10
           done
@@ -79,11 +73,12 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.EC2_PUBLIC_IP }} 
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
             set -e
             sudo apt update -y
+            sudo apt upgrade -y
 
             echo "📦 Installing Docker..."
             sudo apt update && sudo apt install -y docker.io docker-compose git
@@ -101,7 +96,7 @@ jobs:
       - name: Run Smoke Test on EC2
         run: |
           chmod 400 ~/.ssh/bookshop-key.pem
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} << 'EOF'
           
             git clone https://github.com/SkyeKD/book_shop.git
             cd book_shop
