@@ -2,7 +2,9 @@
 
 
 AWS_REGION="us-west-2"
-AMI_ID="ami-00420addee16a7dfb" 
+AMI_ID="ami-021c478d943abe2da" 
+# amazon linux 2023 arm
+# INSTANCE_TYPE="t3.micro"
 INSTANCE_TYPE="t4g.micro"
 KEY_NAME="bookshop-key"
 SECURITY_GROUP_ID="sg-035d78de7367db290"
@@ -23,6 +25,7 @@ echo "EC2 Instance Created: $INSTANCE_ID"
 
 aws ec2 wait instance-running --instance-ids $INSTANCE_ID
 echo "EC2 Instance is running."
+sleep 10
 
 # 5️⃣ get EC2 public IP
 EC2_PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
@@ -30,74 +33,122 @@ echo "EC2 Public IP: $EC2_PUBLIC_IP"
 echo "$INSTANCE_ID" > ec2-instance-id.env
 echo "$EC2_PUBLIC_IP" > ec2_ip.txt
 
+chmod 400 ~/.ssh/bookshop-key.pem
 echo "🚀 Checking SSH Key..."
 ls -lah ~/.ssh/
-cat ~/.ssh/bookshop-key.pem
 
 
-# 6️⃣ install docker
-echo "🚀 Installing Docker, Git, and MySQL on EC2..."
 
-# ssh -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
-#     sudo su -c '
-#     set -e
+# ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@$EC2_PUBLIC_IP << EOF
+#   set -e
 
-#     sudo yum update -y
-#     sudo yum install -y git
+#   echo "📦 Updating system packages..."
+#   sudo dnf install -y curl
+#   sudo dnf makecache --refresh
+#   sudo dnf update -y
 
-#     sudo yum install -y docker
-#     sudo systemctl start docker
-#     sudo systemctl enable docker
-#     sudo usermod -aG docker ec2-user
-#     sudo usermod -aG docker ec2-user
+#   echo "📦 Installing Git..."
+#   sudo dnf install -y git
+#   git --version || echo "❌ Git installation failed"
 
-#     DOCKER_COMPOSE_VERSION="2.22.0"
-#     sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-#     sudo chmod +x /usr/local/bin/docker-compose
-#     newgrp docker
+#   echo "📦 Installing Docker..."
+#   sudo dnf install -y docker
+#   sudo systemctl start docker
+#   sudo systemctl enable docker
+#   sudo usermod -aG docker ec2-user
+
+#   echo "📦 Installing Docker Compose (manual method)..."
+
+#   sudo -i bash << EOF
+#     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+#     chmod +x /usr/local/bin/docker-compose
 #     sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+#   EOF
+#   echo "📦 Installing MySQL ..."
+#   sudo dnf install -y mariadb105
 
-#     sudo yum install -y mariadb105
+#   echo "✅ Git Version: $(git --version || echo '❌ Git installation failed!')"
+#   echo "✅ Docker Version: $(docker --version || echo '❌ Docker installation failed!')"
+#   echo "✅ Docker Compose Version: $(docker-compose version || echo '❌ Docker Compose installation failed!')"
+#   echo "✅ MySQL Version: $(mysql --version || echo '❌ MySQL installation failed!')"
 
-#     echo "✅ Git Version: $(git --version)"
-#     echo "✅ Docker Version: $(docker --version)"
-#     echo "✅ Docker Compose Version: $(docker-compose --version)"
-#     echo "✅ MySQL Version: $(mysql --version)"
-#     '
-    
+#   echo "🚀 Setup Complete!"
 # EOF
 
-ssh -tt -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
-    sudo su -c '
-    set -e
+#   sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+#   sudo chmod +x /usr/local/bin/docker-compose
+#   sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-    echo "📦 Updating system packages..."
-    sudo yum update -y
+# ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
+#   set -e
 
-    echo "📦 Installing Git..."
-    sudo yum install -y git
-    git --version || echo "❌ Git installation failed"
+#   echo "📦 Updating system packages..."
+#   sudo dnf install -y curl
+#   sudo dnf makecache --refresh
+#   sudo dnf update -y
 
-    echo "📦 Installing Docker..."
-    sudo yum install -y docker
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo usermod -aG docker ec2-user
+#   echo "📦 Installing Git..."
+#   sudo dnf install -y git
+#   git --version || echo "❌ Git installation failed"
 
-    echo "📦 Installing Docker Compose..."
-    DOCKER_COMPOSE_VERSION="2.22.0"
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+#   echo "📦 Installing Docker..."
+#   sudo dnf install -y docker
+#   sudo systemctl start docker
+#   sudo systemctl enable docker
+#   sudo usermod -aG docker ec2-user
 
-    echo "📦 Installing MySQL (MariaDB)..."
-    sudo yum install -y mariadb105
+#   echo "📦 Installing Docker Compose (manual method)..."
 
-    echo "✅ Git Version: $(git --version || echo 'Not installed')"
-    echo "✅ Docker Version: $(docker --version || echo 'Not installed')"
-    echo "✅ Docker Compose Version: $(docker-compose --version || echo 'Not installed')"
-    echo "✅ MySQL Version: $(mysql --version || echo 'Not installed')"
-    '
+#   # 下载 Docker Compose 最新版本
+#   DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+#   sudo curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+#   # 确保 `docker-compose` 可执行
+#   sudo chmod +x /usr/local/bin/docker-compose
+
+#   # 软链接，确保 `docker compose` 命令可用
+#   sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+#   # 确保 Docker Compose 插件可用
+#   sudo dnf install -y docker-compose-plugin || echo "⚠️ Failed to install docker-compose-plugin"
+
+#   echo "📦 Installing MySQL ..."
+#   sudo dnf install -y mariadb105
+
+#   echo "✅ Git Version: $(git --version || echo '❌ Git installation failed!')"
+#   echo "✅ Docker Version: $(docker --version || echo '❌ Docker installation failed!')"
+#   echo "✅ Docker Compose Version: $(docker compose version || echo '❌ Docker Compose installation failed!')"
+#   echo "✅ MySQL Version: $(mysql --version || echo '❌ MySQL installation failed!')"
+
+#   echo "🚀 Setup Complete!"
+# EOF
+
+ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ec2-user@$EC2_PUBLIC_IP << EOF
+  set -e
+
+  echo "📦 Updating system packages..."
+  sudo dnf clean all
+  sudo dnf makecache --refresh
+  sudo dnf update -y --allowerasing || echo "⚠️ System update failed"
+
+  echo "📦 Handling curl installation..."
+  if rpm -q curl; then
+    sudo dnf swap -y curl curl-minimal || echo "⚠️ Failed to swap curl with curl-minimal"
+  else
+    sudo dnf install -y curl-minimal || echo "⚠️ Failed to install curl-minimal"
+  fi
+
+  echo "📦 Installing Git..."
+  sudo dnf install -y git || echo "⚠️ Git installation failed"
+  git --version || echo "❌ Git installation verification failed"
+
+  echo "📦 Installing MySQL (MariaDB 10.5)..."
+  sudo dnf install -y mariadb105
+
+  echo "✅ Git Version: \$(git --version || echo '❌ Git installation failed!')"
+  echo "✅ MySQL Version: \$(mysql --version || echo '❌ MySQL installation failed!')"
+
+  echo "🚀 Setup Complete!"
 EOF
 
 # 6️⃣ connect SSH

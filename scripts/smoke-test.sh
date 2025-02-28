@@ -1,17 +1,11 @@
 #!/bin/bash
 
 
-# **从 ec2-instance.env 读取 EC2 的公网 IP**
-# source ec2-instance.env
+# BACKEND_URL="http://$EC2_PUBLIC_IP:8800/books"
+# FRONTEND_URL="http://$EC2_PUBLIC_IP:3000"
 
-# if [ -z "$EC2_PUBLIC_IP" ]; then
-#   echo "❌ EC2_PUBLIC_IP is empty! Make sure deploy-ec2.sh was run successfully."
-#   exit 1
-# fi
-EC2_PUBLIC_IP=44.245.208.49
-
-BACKEND_URL="http://$EC2_PUBLIC_IP:8800/books"
-FRONTEND_URL="http://$EC2_PUBLIC_IP:3000"
+BACKEND_URL="http://localhost:8800/books"
+FRONTEND_URL="http://localhost:3000"
 
 
 echo "🔍 Testing Backend Health..."

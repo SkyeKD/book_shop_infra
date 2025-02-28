@@ -74,6 +74,28 @@ jobs:
           do
             sleep 10
           done
+          
+      - name: SSH into EC2 and install Docker & Docker Compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ needs.create-ec2.outputs.instance_ip }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            sudo apt update -y
+
+            echo "📦 Installing Docker..."
+            sudo apt update && sudo apt install -y docker.io docker-compose git
+            sudo systemctl start docker
+            sudo usermod -aG docker $USER
+            newgrp docker
+            sleep 10
+
+            echo "✅ Docker Version: $(docker --version || echo '❌ Docker installation failed!')"
+            echo "✅ Docker Compose Version: $(docker-compose --version || echo '❌ Docker Compose installation failed!')"
+
+            echo "🚀 Setup Complete!"
 
       # connect to EV2 and run Smoke Test
       - name: Run Smoke Test on EC2
@@ -84,7 +106,7 @@ jobs:
             git clone https://github.com/SkyeKD/book_shop.git
             cd book_shop
             
-            sudo docker-compose -f docker-compose.smoke.yml up -d --build
+            docker-compose --file docker-compose.smoke.yml up -d --build
             
             chmod +x scripts/smoke-test.sh
             ./scripts/smoke-test.sh
