@@ -93,16 +93,16 @@ jobs:
             echo "🚀 Setup Complete!"
 
       - name: Free up port 3306 before starting MySQL
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} << 'EOF'
-          echo "🔍 Checking for processes using port 3306..."
-          if sudo lsof -i :3306; then
-            echo "⚠️ Port 3306 is in use, stopping process..."
-            sudo fuser -k 3306/tcp || echo "Failed to kill process"
-          else
-            echo "✅ Port 3306 is free"
-          fi
-        EOF
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} << 'EOF'
+            echo "🔍 Checking for processes using port 3306..."
+            if sudo lsof -i :3306; then
+              echo "⚠️ Port 3306 is in use, stopping process..."
+              sudo fuser -k 3306/tcp || echo "Failed to kill process"
+            else
+              echo "✅ Port 3306 is free"
+            fi
+          EOF
 
       # connect to EV2 and run Smoke Test
       - name: Run Smoke Test on EC2
