@@ -74,11 +74,11 @@ jobs:
           do
             sleep 10
           done
-          
+
       - name: SSH into EC2 and install Docker & Docker Compose
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ needs.create-ec2.outputs.instance_ip }}
+          host: ${{ env.EC2_PUBLIC_IP }} 
           username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |

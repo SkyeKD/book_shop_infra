@@ -32,6 +32,7 @@ EC2_PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "
 echo "EC2 Public IP: $EC2_PUBLIC_IP"
 echo "$INSTANCE_ID" > ec2-instance-id.env
 echo "$EC2_PUBLIC_IP" > ec2_ip.txt
+echo "EC2_PUBLIC_IP=$EC2_PUBLIC_IP" >> "$GITHUB_ENV"
 
 chmod 400 ~/.ssh/bookshop-key.pem
 echo "🚀 Checking SSH Key..."
