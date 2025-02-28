@@ -98,13 +98,17 @@ jobs:
           chmod 400 ~/.ssh/bookshop-key.pem
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/bookshop-key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} << 'EOF'
           
-            git clone https://github.com/SkyeKD/book_shop.git
+            git clone https://github.com/SkyeKD/book_shop.git || (cd book_shop && git pull)
             cd book_shop
             
-            docker-compose --file docker-compose.smoke.yml up -d --build
+            docker-compose -f docker-compose.smoke.yml up -d --build
             
-            chmod +x scripts/smoke-test.sh
-            ./scripts/smoke-test.sh
+            sleep 10
+
+            echo "🔍 Checking if backend is running..."
+            curl -sSf http://localhost:8800/books || (echo "❌ Backend not responding!" && exit 1)
+
+            echo "✅ Smoke Test Passed!"
           EOF
 
       # end EC2
