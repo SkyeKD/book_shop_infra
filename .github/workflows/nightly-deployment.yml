@@ -120,8 +120,9 @@ jobs:
 
             echo "🔍 Checking if frontend is running..."
             curl -Isf http://localhost:3000 || (echo "❌ frontend not responding!" && exit 1)
-
-
+            
+            # echo "🔍 Checking if backend is running..."
+            curl -sSf http://localhost:8800/books || (echo "❌ Backend not responding!" && exit 1)
             echo "✅ Smoke Test Passed!"
           EOF
     # echo "🔍 Checking if backend is running..."
