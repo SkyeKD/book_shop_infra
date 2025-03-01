@@ -14,7 +14,7 @@ SECURITY_GROUP_ID="sg-035d78de7367db290"
 
 # 3️⃣ create EC2 instance
 INSTANCE_ID=$(aws ec2 run-instances \
-    --region us-west-2 \
+    # --region us-west-2 \
     --image-id $AMI_ID \
     --count 1 \
     --instance-type $INSTANCE_TYPE \
