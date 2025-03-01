@@ -3,8 +3,8 @@
 
 AWS_REGION="us-west-2"
 # AMI_ID="ami-021c478d943abe2da" 
-# AMI_ID="ami-00c257e12d6828491" 
-AMI_ID="ami-04b4f1a9cf54c11d0" 
+AMI_ID="ami-00c257e12d6828491" 
+# AMI_ID="ami-04b4f1a9cf54c11d0" 
 # ami-04b4f1a9cf54c11d0
 
 INSTANCE_TYPE="t2.micro"
@@ -14,6 +14,7 @@ SECURITY_GROUP_ID="sg-035d78de7367db290"
 
 # 3️⃣ create EC2 instance
 INSTANCE_ID=$(aws ec2 run-instances \
+    --region us-west-2 \
     --image-id $AMI_ID \
     --count 1 \
     --instance-type $INSTANCE_TYPE \
